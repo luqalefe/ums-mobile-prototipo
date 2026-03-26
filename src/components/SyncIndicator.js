@@ -33,10 +33,10 @@ const SyncIndicator = ({ pendingCount, isOnline, isSyncing }) => {
   }, [pendingCount, isOnline]);
 
   const getStatusInfo = () => {
-    if (isSyncing) return { icon: 'sync', color: '#FF9800', text: 'Sincronizando...' };
-    if (pendingCount === 0) return { icon: 'checkmark-circle', color: '#4CAF50', text: 'Tudo sincronizado' };
-    if (isOnline) return { icon: 'cloud-upload', color: '#2196F3', text: `${pendingCount} aguardando envio` };
-    return { icon: 'cloud-offline', color: '#F44336', text: `${pendingCount} na fila offline` };
+    if (isSyncing) return { icon: 'sync', color: '#F3C524', text: 'Sincronizando...' };
+    if (pendingCount === 0) return { icon: 'checkmark-circle', color: '#168821', text: 'Tudo sincronizado' };
+    if (isOnline) return { icon: 'cloud-upload', color: '#1A5C38', text: `${pendingCount} aguardando envio` };
+    return { icon: 'cloud-offline', color: '#E52207', text: `${pendingCount} na fila offline` };
   };
 
   const status = getStatusInfo();
@@ -49,9 +49,9 @@ const SyncIndicator = ({ pendingCount, isOnline, isSyncing }) => {
     <View style={styles.container}>
       <View style={styles.content}>
         <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-          <Ionicons name={status.icon} size={20} color={status.color} />
+          <Ionicons name={status.icon} size={24} color={status.color} />
         </Animated.View>
-        <Text style={[styles.text, { color: status.color }]}>{status.text}</Text>
+        <Text style={[styles.text, { color: '#333' }]}>{status.text}</Text>
         {pendingCount > 0 && (
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{pendingCount}</Text>
@@ -60,7 +60,7 @@ const SyncIndicator = ({ pendingCount, isOnline, isSyncing }) => {
       </View>
       {isSyncing && (
         <View style={styles.progressBar}>
-          <Animated.View style={[styles.progressFill, { width: progressWidth }]} />
+          <Animated.View style={[styles.progressFill, { width: progressWidth, backgroundColor: status.color }]} />
         </View>
       )}
     </View>
@@ -69,10 +69,17 @@ const SyncIndicator = ({ pendingCount, isOnline, isSyncing }) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#1E1E2E',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
-    padding: 14,
-    marginBottom: 14,
+    padding: 16,
+    marginBottom: 16,
+    borderLeftWidth: 6,
+    borderLeftColor: '#F3C524', // Amarelo para destacar que é área de Sync
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   content: {
     flexDirection: 'row',
@@ -99,15 +106,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   progressBar: {
-    height: 3,
-    backgroundColor: '#2A2A3E',
+    height: 4,
+    backgroundColor: '#F0F0F0',
     borderRadius: 2,
-    marginTop: 10,
+    marginTop: 12,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#FF9800',
+    backgroundColor: '#FFCD07',
     borderRadius: 2,
   },
 });

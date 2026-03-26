@@ -10,12 +10,12 @@ const StatusCard = ({ icon, iconColor, title, value, subtitle, accentColor, chil
     <View style={[
       styles.card,
       isTablet && styles.cardTablet,
-      accentColor && { borderLeftWidth: 4, borderLeftColor: accentColor }
+      { borderLeftWidth: 6, borderLeftColor: accentColor || '#1A5C38' }
     ]}>
       <View style={styles.header}>
         {icon && (
-          <View style={[styles.iconContainer, { backgroundColor: (iconColor || '#6C63FF') + '20' }]}>
-            <Ionicons name={icon} size={isTablet ? 28 : 22} color={iconColor || '#6C63FF'} />
+          <View style={[styles.iconContainer, { backgroundColor: (iconColor || '#1351B4') + '20' }]}>
+            <Ionicons name={icon} size={isTablet ? 28 : 22} color={iconColor || '#1351B4'} />
           </View>
         )}
         <Text style={[styles.title, isTablet && styles.titleTablet]}>{title}</Text>
@@ -38,15 +38,15 @@ const StatusCard = ({ icon, iconColor, title, value, subtitle, accentColor, chil
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#1E1E2E',
-    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     padding: 18,
     marginBottom: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
   },
   cardTablet: {
     padding: 24,
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#A0A0B0',
+    color: '#666666',
     flex: 1,
   },
   titleTablet: {
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
   value: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#FFFFFF',
+    color: '#333333',
     marginVertical: 4,
   },
   valueTablet: {
@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 12,
-    color: '#666680',
+    color: '#666666',
     marginTop: 4,
   },
   subtitleTablet: {

@@ -70,11 +70,11 @@ const HistoryScreen = () => {
     const isSuccess = item.syncStatus === 'success';
     return (
       <View style={[styles.item, isTablet && styles.itemTablet]}>
-        <View style={[styles.syncStatusIcon, { backgroundColor: isSuccess ? '#4CAF5020' : '#F4433620' }]}>
+        <View style={[styles.syncStatusIcon, { backgroundColor: isSuccess ? '#16882120' : '#E5220720' }]}>
           <Ionicons
             name={isSuccess ? 'checkmark-circle' : 'close-circle'}
             size={20}
-            color={isSuccess ? '#4CAF50' : '#F44336'}
+            color={isSuccess ? '#168821' : '#E52207'}
           />
         </View>
         <View style={styles.itemContent}>
@@ -82,8 +82,8 @@ const HistoryScreen = () => {
             <Text style={styles.itemTime}>
               {formatDate(item.syncedAt)} {formatTime(item.syncedAt)}
             </Text>
-            <View style={[styles.syncBadge, { backgroundColor: isSuccess ? '#4CAF5030' : '#F4433630' }]}>
-              <Text style={[styles.syncBadgeText, { color: isSuccess ? '#4CAF50' : '#F44336' }]}>
+            <View style={[styles.syncBadge, { backgroundColor: isSuccess ? '#16882130' : '#E5220730' }]}>
+              <Text style={[styles.syncBadgeText, { color: isSuccess ? '#168821' : '#E52207' }]}>
                 {isSuccess ? 'Enviado' : 'Falhou'}
               </Text>
             </View>
@@ -106,7 +106,7 @@ const HistoryScreen = () => {
           style={[styles.tab, activeTab === 'live' && styles.tabActive]}
           onPress={() => setActiveTab('live')}
         >
-          <Ionicons name="radio" size={18} color={activeTab === 'live' ? '#6C63FF' : '#666'} />
+          <Ionicons name="radio" size={18} color={activeTab === 'live' ? '#1351B4' : '#666'} />
           <Text style={[styles.tabText, activeTab === 'live' && styles.tabTextActive]}>
             Ao Vivo ({locationHistory.length})
           </Text>
@@ -115,7 +115,7 @@ const HistoryScreen = () => {
           style={[styles.tab, activeTab === 'synced' && styles.tabActive]}
           onPress={() => setActiveTab('synced')}
         >
-          <Ionicons name="cloud-done" size={18} color={activeTab === 'synced' ? '#6C63FF' : '#666'} />
+          <Ionicons name="cloud-done" size={18} color={activeTab === 'synced' ? '#1351B4' : '#666'} />
           <Text style={[styles.tabText, activeTab === 'synced' && styles.tabTextActive]}>
             Sincronizados ({syncHistory.length})
           </Text>
@@ -125,7 +125,7 @@ const HistoryScreen = () => {
       {/* Pending Banner */}
       {pendingCount > 0 && (
         <View style={styles.pendingBanner}>
-          <Ionicons name="time" size={16} color="#FF9800" />
+          <Ionicons name="time" size={16} color="#FFCD07" />
           <Text style={styles.pendingText}>
             {pendingCount} pacote(s) na fila offline
           </Text>
@@ -142,8 +142,8 @@ const HistoryScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor="#6C63FF"
-            colors={['#6C63FF']}
+            tintColor="#1351B4"
+            colors={['#1351B4']}
           />
         }
         ListEmptyComponent={
@@ -164,11 +164,11 @@ const HistoryScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#13131A',
+    backgroundColor: '#071D41',
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: '#1E1E2E',
+    backgroundColor: '#071D41',
     paddingTop: Platform.OS === 'ios' ? 50 : 8,
     paddingHorizontal: 16,
     paddingBottom: 8,
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tabActive: {
-    borderBottomColor: '#6C63FF',
+    borderBottomColor: '#1351B4',
   },
   tabText: {
     fontSize: 14,
@@ -195,18 +195,18 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   tabTextActive: {
-    color: '#6C63FF',
+    color: '#1351B4',
   },
   pendingBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FF980020',
+    backgroundColor: '#FFCD0720',
     paddingHorizontal: 16,
     paddingVertical: 10,
     gap: 8,
   },
   pendingText: {
-    color: '#FF9800',
+    color: '#FFCD07',
     fontSize: 13,
     fontWeight: '600',
   },
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
   item: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1E1E2E',
+    backgroundColor: '#071D41',
     borderRadius: 12,
     padding: 14,
     marginBottom: 10,
@@ -232,13 +232,13 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: '#6C63FF20',
+    backgroundColor: '#1351B420',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
   },
   indexText: {
-    color: '#6C63FF',
+    color: '#1351B4',
     fontWeight: '700',
     fontSize: 14,
   },
@@ -265,10 +265,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   itemAsset: {
-    color: '#6C63FF',
+    color: '#1351B4',
     fontSize: 12,
     fontWeight: '700',
-    backgroundColor: '#6C63FF20',
+    backgroundColor: '#1351B420',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,

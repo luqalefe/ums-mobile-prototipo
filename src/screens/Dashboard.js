@@ -48,16 +48,17 @@ const Dashboard = ({ navigation }) => {
             </Text>
             <Text style={styles.subtitle}>UMS Logistics • Módulo GPS</Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: isOnline ? '#4CAF5030' : '#F4433630' }]}>
-            <View style={[styles.statusDot, { backgroundColor: isOnline ? '#4CAF50' : '#F44336' }]} />
-            <Text style={[styles.statusBadgeText, { color: isOnline ? '#4CAF50' : '#F44336' }]}>
+          <View style={[styles.statusBadge, { backgroundColor: isOnline ? '#1A5C38' : '#E5220730' }]}>
+            <View style={[styles.statusDot, { backgroundColor: isOnline ? '#1A5C38' : '#E52207' }]} />
+            <Text style={[styles.statusBadgeText, { color: isOnline ? '#FFF' : '#E52207' }]}>
               {isOnline ? 'Online' : 'Offline'}
             </Text>
           </View>
         </View>
 
-        {/* Sync Indicator */}
-        <SyncIndicator pendingCount={pendingCount} isOnline={isOnline} isSyncing={isSyncing} />
+        <View style={styles.bodyWrapper}>
+          {/* Sync Indicator */}
+          <SyncIndicator pendingCount={pendingCount} isOnline={isOnline} isSyncing={isSyncing} />
 
         {/* Cards Grid */}
         <View style={isTablet ? styles.gridTablet : styles.gridPhone}>
@@ -66,7 +67,7 @@ const Dashboard = ({ navigation }) => {
           <View style={isTablet ? styles.gridItem : null}>
             <StatusCard
               icon="navigate"
-              iconColor={isTracking ? '#4CAF50' : '#FF5252'}
+              iconColor={isTracking ? '#168821' : '#FF5252'}
               title="Controle GPS"
               subtitle={useMockLocation ? '📍 Usando posição simulada' : '📡 GPS real ativo'}
             >
@@ -74,9 +75,9 @@ const Dashboard = ({ navigation }) => {
                 <Ionicons
                   name={isTracking ? 'radio' : 'radio-outline'}
                   size={24}
-                  color={isTracking ? '#4CAF50' : '#666'}
+                  color={isTracking ? '#168821' : '#666'}
                 />
-                <Text style={[styles.trackingText, { color: isTracking ? '#4CAF50' : '#999' }]}>
+                <Text style={[styles.trackingText, { color: isTracking ? '#168821' : '#999' }]}>
                   {isTracking ? 'Rastreando a cada 10s' : 'Parado'}
                 </Text>
               </View>
@@ -136,11 +137,11 @@ const Dashboard = ({ navigation }) => {
           <View style={isTablet ? styles.gridItem : null}>
             <StatusCard
               icon="cloud-upload"
-              iconColor="#FF9800"
+              iconColor="#FFCD07"
               title="Fila Offline"
               value={pendingCount}
               subtitle="pacotes aguardando sincronização"
-              accentColor="#FF9800"
+              accentColor="#FFCD07"
             >
               {pendingCount > 0 && isOnline && (
                 <TouchableOpacity
@@ -162,7 +163,7 @@ const Dashboard = ({ navigation }) => {
           <View style={isTablet ? styles.gridItem : null}>
             <StatusCard
               icon="wifi"
-              iconColor="#6C63FF"
+              iconColor="#1351B4"
               title="Controle de Rede"
               subtitle={`${stats.reconnections} reconexão(ões) • ${stats.offlineDuration}s offline total`}
             >
@@ -194,6 +195,7 @@ const Dashboard = ({ navigation }) => {
         )}
 
         <Text style={styles.footer}>UMS Mobile v1.0 • {isTablet ? 'Tablet' : 'Celular'}</Text>
+        </View>
       </Animated.View>
     </ScrollView>
   );
@@ -202,18 +204,24 @@ const Dashboard = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#13131A',
+    backgroundColor: '#F5F5F5',
   },
   content: {
-    padding: 16,
-    paddingTop: Platform.OS === 'ios' ? 60 : 16,
     paddingBottom: 30,
+  },
+  bodyWrapper: {
+    paddingHorizontal: 16,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+    backgroundColor: '#1A5C38',
+    padding: 20,
+    paddingTop: Platform.OS === 'ios' ? 60 : 20,
+    borderBottomWidth: 4,
+    borderBottomColor: '#F3C524',
   },
   title: {
     fontSize: 24,
@@ -225,7 +233,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 13,
-    color: '#666680',
+    color: '#DEDEDE',
     marginTop: 4,
   },
   statusBadge: {
@@ -274,15 +282,16 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginTop: 8,
   },
-  startBtn: { backgroundColor: '#4CAF50' },
-  stopBtn: { backgroundColor: '#F44336' },
-  syncBtn: { backgroundColor: '#2196F3' },
-  onlineBtn: { backgroundColor: '#4CAF50' },
-  offlineBtn: { backgroundColor: '#607D8B' },
+  startBtn: { backgroundColor: '#168821' },
+  stopBtn: { backgroundColor: '#E52207' },
+  syncBtn: { backgroundColor: '#F3C524' },
+  onlineBtn: { backgroundColor: '#F3C524' },
+  offlineBtn: { backgroundColor: '#F3C524' },
   buttonText: {
-    color: '#FFF',
+    color: '#1A5C38',
     fontSize: 15,
     fontWeight: '700',
+    textTransform: 'uppercase',
   },
   coordsContainer: {
     marginTop: 4,
@@ -298,12 +307,12 @@ const styles = StyleSheet.create({
   coordLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#6C63FF',
+    color: '#1351B4',
     letterSpacing: 1,
   },
   coordValue: {
     fontSize: 16,
-    color: '#E0E0E0',
+    color: '#333333',
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
   noData: {

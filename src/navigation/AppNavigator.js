@@ -23,11 +23,11 @@ const AppNavigator = () => {
           else if (route.name === 'Histórico') iconName = focused ? 'time' : 'time-outline';
           return <Ionicons name={iconName} size={isTablet ? 28 : size} color={color} />;
         },
-        tabBarActiveTintColor: '#6C63FF',
-        tabBarInactiveTintColor: '#555',
+        tabBarActiveTintColor: '#1A5C38',
+        tabBarInactiveTintColor: '#888',
         tabBarStyle: {
-          backgroundColor: '#1E1E2E',
-          borderTopColor: '#2A2A3E',
+          backgroundColor: '#FFFFFF',
+          borderTopColor: '#E0E0E0',
           borderTopWidth: 1,
           height: Platform.OS === 'ios' ? (isTablet ? 90 : 85) : (isTablet ? 70 : 60),
           paddingBottom: Platform.OS === 'ios' ? (isTablet ? 28 : 24) : 8,

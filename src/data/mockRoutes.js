@@ -59,8 +59,8 @@ export const MOCK_DELIVERIES = [
 
 export const getStatusColor = (status) => {
   switch (status) {
-    case 'entregue': return '#4CAF50';
-    case 'em_rota': return '#FF9800';
+    case 'entregue': return '#168821';
+    case 'em_rota': return '#FFCD07';
     case 'pendente': return '#9E9E9E';
     default: return '#666';
   }

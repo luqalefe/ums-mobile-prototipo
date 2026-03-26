@@ -128,7 +128,7 @@ const MapScreen = () => {
         <View style={styles.statusContent}>
           <View style={[
             styles.statusIndicator,
-            { backgroundColor: routeStatus === 'active' ? '#4CAF50' : routeStatus === 'pending' ? '#FF9800' : '#666' }
+            { backgroundColor: routeStatus === 'active' ? '#168821' : routeStatus === 'pending' ? '#FFCD07' : '#666' }
           ]} />
           <Text style={styles.statusText}>
             {routeStatus === 'active' && `🚛 Em rota: ${activeDestination}`}
@@ -175,7 +175,7 @@ const MapScreen = () => {
       {routeStatus === 'active' && dispatch && (
         <View style={[styles.routePanel, isTablet && styles.routePanelTablet]}>
           <View style={styles.routePanelHeader}>
-            <Ionicons name="navigate" size={20} color="#4CAF50" />
+            <Ionicons name="navigate" size={20} color="#168821" />
             <Text style={styles.routePanelTitle}>{dispatch.local_destino}</Text>
           </View>
           <Text style={styles.routePanelSub}>
@@ -201,14 +201,14 @@ const MapScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#13131A',
+    backgroundColor: '#071D41',
   },
   statusBar: {
     position: 'absolute',
     top: Platform.OS === 'ios' ? 55 : 10,
     left: 16,
     right: 16,
-    backgroundColor: '#1A1A2EEE',
+    backgroundColor: '#071D41EE',
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -259,20 +259,20 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   fabFinish: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#168821',
   },
   fabDispatch: {
-    backgroundColor: '#6C63FF',
+    backgroundColor: '#1351B4',
   },
   fabCenter: {
-    backgroundColor: '#1E1E2E',
+    backgroundColor: '#071D41',
   },
   routePanel: {
     position: 'absolute',
     bottom: 24,
     left: 16,
     right: 80,
-    backgroundColor: '#1A1A2EEE',
+    backgroundColor: '#071D41EE',
     borderRadius: 16,
     padding: 16,
   },

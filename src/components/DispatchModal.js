@@ -45,8 +45,8 @@ const DispatchModal = ({ visible, dispatch, onAccept, onReject }) => {
   if (!dispatch) return null;
 
   const getPriorityColor = (p) => {
-    if (p === 'URGENTE') return '#F44336';
-    if (p === 'ALTA') return '#FF9800';
+    if (p === 'URGENTE') return '#E52207';
+    if (p === 'ALTA') return '#FFCD07';
     return '#2196F3';
   };
 
@@ -70,7 +70,7 @@ const DispatchModal = ({ visible, dispatch, onAccept, onReject }) => {
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.alertIcon}>
-              <Ionicons name="alert-circle" size={28} color="#F44336" />
+              <Ionicons name="alert-circle" size={28} color="#E52207" />
             </View>
             <View style={styles.headerText}>
               <Text style={[styles.title, isTablet && styles.titleTablet]}>
@@ -91,7 +91,7 @@ const DispatchModal = ({ visible, dispatch, onAccept, onReject }) => {
           {/* Descrição */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="document-text" size={18} color="#6C63FF" />
+              <Ionicons name="document-text" size={18} color="#1351B4" />
               <Text style={styles.sectionTitle}>Descrição</Text>
             </View>
             <Text style={[styles.description, isTablet && styles.descriptionTablet]}>
@@ -102,7 +102,7 @@ const DispatchModal = ({ visible, dispatch, onAccept, onReject }) => {
           {/* Destino */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Ionicons name="location" size={18} color="#E53935" />
+              <Ionicons name="location" size={18} color="#E52207" />
               <Text style={styles.sectionTitle}>Destino</Text>
             </View>
             <Text style={[styles.destination, isTablet && styles.destinationTablet]}>
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   sheet: {
-    backgroundColor: '#1A1A2E',
+    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 16,
-    backgroundColor: '#F4433620',
+    backgroundColor: '#E5220720',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#FFF',
+    color: '#333333',
     marginBottom: 4,
   },
   titleTablet: {
@@ -253,8 +253,8 @@ const styles = StyleSheet.create({
   },
   section: {
     marginBottom: 16,
-    backgroundColor: '#222240',
-    borderRadius: 14,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
     padding: 16,
   },
   sectionHeader: {
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
   },
   description: {
     fontSize: 15,
-    color: '#DDD',
+    color: '#333333',
     lineHeight: 22,
   },
   descriptionTablet: {
@@ -282,7 +282,7 @@ const styles = StyleSheet.create({
   destination: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#FFF',
+    color: '#333333',
   },
   destinationTablet: {
     fontSize: 22,
@@ -328,15 +328,16 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   rejectButton: {
-    backgroundColor: '#D32F2F',
+    backgroundColor: '#E52207',
   },
   acceptButton: {
-    backgroundColor: '#2E7D32',
+    backgroundColor: '#F3C524',
   },
   buttonText: {
-    color: '#FFF',
+    color: '#1A5C38',
     fontSize: 17,
-    fontWeight: '800',
+    fontWeight: 'bold',
+    textTransform: 'uppercase',
   },
   buttonTextTablet: {
     fontSize: 20,
