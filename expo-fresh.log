@@ -1,0 +1,13 @@
+Starting project at /home/luqalefe/projetos/ums-mobile
+Starting Metro Bundler
+warning: Bundler cache is empty, rebuilding (this may take a minute)
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+Android node_modules/expo/AppEntry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android node_modules/expo/AppEntry.js ▓▓▓▓▓▓░░░░░░░░░░ 38.4% ( 76/259)
+Android node_modules/expo/AppEntry.js ▓▓▓▓▓▓░░░░░░░░░░ 41.8% (443/685)
+Android node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 78.3% ( 944/1090)
+Android node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 94.5% (1274/1322)
+Android Bundled 16493ms node_modules/expo/AppEntry.js (1467 modules)
+Android node_modules/expo/AppEntry.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 84ms node_modules/expo/AppEntry.js (1 module)

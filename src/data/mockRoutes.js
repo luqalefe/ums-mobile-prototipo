@@ -1,13 +1,13 @@
 /**
  * Mock GPS Routes - Rotas simuladas em Rio Branco, Acre
+ * Formato de patrimonio compativel com a API: patrimonio_tablet (ex: TREAC-12345)
  */
 
-// Rota simulada de entrega - Rio Branco
 export const MOCK_ROUTE = [
-  { latitude: -9.9747, longitude: -67.8100, label: 'Saída - Base Central (Centro)' },
+  { latitude: -9.9747, longitude: -67.8100, label: 'Saida - Base Central (Centro)' },
   { latitude: -9.9730, longitude: -67.8070, label: 'Ponto 1 - Av. Brasil' },
-  { latitude: -9.9710, longitude: -67.8040, label: 'Ponto 2 - Estação Experimental' },
-  { latitude: -9.9695, longitude: -67.8010, label: 'Ponto 3 - Conjunto Tucumã' },
+  { latitude: -9.9710, longitude: -67.8040, label: 'Ponto 2 - Estacao Experimental' },
+  { latitude: -9.9695, longitude: -67.8010, label: 'Ponto 3 - Conjunto Tucuma' },
   { latitude: -9.9680, longitude: -67.7980, label: 'Ponto 4 - Via Verde' },
   { latitude: -9.9660, longitude: -67.7950, label: 'Ponto 5 - UNINORTE' },
   { latitude: -9.9640, longitude: -67.7920, label: 'Ponto 6 - Jardim Europa' },
@@ -16,14 +16,19 @@ export const MOCK_ROUTE = [
   { latitude: -9.9580, longitude: -67.7830, label: 'Chegada - Destino Final' },
 ];
 
-// Dados dos patrimônios (veículos/tablets)
 export const MOCK_ASSETS = [
-  { id: 'TB-001', type: 'Tablet', driver: 'Carlos Silva', vehicle: 'VAN-2847' },
-  { id: 'TB-002', type: 'Tablet', driver: 'Maria Santos', vehicle: 'VAN-1923' },
-  { id: 'TB-003', type: 'Tablet', driver: 'João Oliveira', vehicle: 'VAN-3651' },
+  { patrimonio_tablet: 'TREAC-12345', type: 'Tablet', driver: 'Carlos Silva', vehicle: 'VAN-2847' },
+  { patrimonio_tablet: 'TREAC-12346', type: 'Tablet', driver: 'Maria Santos', vehicle: 'VAN-1923' },
+  { patrimonio_tablet: 'TREAC-12347', type: 'Tablet', driver: 'Joao Oliveira', vehicle: 'VAN-3651' },
 ];
 
-// Gerar posição mockada baseada na rota
+export const MOCK_ROTAS = [
+  { rota_id: 12, descricao: 'Rota Norte - Estacao Experimental' },
+  { rota_id: 15, descricao: 'Rota Sul - Conjunto Esperanca' },
+  { rota_id: 18, descricao: 'Rota Leste - Via Verde' },
+  { rota_id: 21, descricao: 'Rota Oeste - Bosque' },
+];
+
 let currentRouteIndex = 0;
 
 export const getMockPosition = () => {
@@ -33,7 +38,7 @@ export const getMockPosition = () => {
     coords: {
       latitude: point.latitude + jitter(),
       longitude: point.longitude + jitter(),
-      altitude: 140 + Math.random() * 10, // Rio Branco ~ 153m altitude
+      altitude: 140 + Math.random() * 10,
       accuracy: 5 + Math.random() * 10,
       heading: Math.random() * 360,
       speed: 5 + Math.random() * 30,
@@ -44,11 +49,10 @@ export const getMockPosition = () => {
   return position;
 };
 
-// Status de entregas mockado
 export const MOCK_DELIVERIES = [
   { id: 1, status: 'entregue', address: 'Escola Armando Nogueira', time: '08:30', recipient: 'Ana Costa' },
-  { id: 2, status: 'entregue', address: 'CEF Raimundo Hermínio', time: '09:15', recipient: 'Pedro Lima' },
-  { id: 3, status: 'em_rota', address: 'Colégio Acreano', time: '10:00', recipient: 'Lucia Neves' },
+  { id: 2, status: 'entregue', address: 'CEF Raimundo Herminio', time: '09:15', recipient: 'Pedro Lima' },
+  { id: 3, status: 'em_rota', address: 'Colegio Acreano', time: '10:00', recipient: 'Lucia Neves' },
   { id: 4, status: 'pendente', address: 'Escola Neutel Maia', time: '10:45', recipient: 'Roberto Dias' },
   { id: 5, status: 'pendente', address: 'IFAC Campus Centro', time: '11:30', recipient: 'Fernanda Souza' },
 ];

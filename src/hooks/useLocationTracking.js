@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as Location from 'expo-location';
 import apiMock from '../services/apiMock';
+import { enviarPosicoes } from '../services/apiClient';
 import SyncService from '../services/SyncService';
 import { useNetwork } from '../contexts/NetworkContext';
 import { getMockPosition } from '../data/mockRoutes';
-
-const INTERVAL_MS = 10000; // 10 segundos
+import { PATRIMONIO_TABLET, GPS_INTERVAL_MS, USE_MOCK_API } from '../config';
 
 export const useLocationTracking = () => {
   const [isTracking, setIsTracking] = useState(false);
@@ -15,16 +15,13 @@ export const useLocationTracking = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastError, setLastError] = useState(null);
   const [useMockLocation, setUseMockLocation] = useState(false);
+  const [rotaId, setRotaId] = useState(null);
   const { isOnline } = useNetwork();
   const timerRef = useRef(null);
   const isOnlineRef = useRef(isOnline);
 
-  // Manter ref atualizada
-  useEffect(() => {
-    isOnlineRef.current = isOnline;
-  }, [isOnline]);
+  useEffect(() => { isOnlineRef.current = isOnline; }, [isOnline]);
 
-  // Atualizar contador de pendentes
   useEffect(() => {
     const updateCount = async () => {
       const count = await SyncService.getQueueCount();
@@ -35,19 +32,16 @@ export const useLocationTracking = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Sync automático quando volta online
   useEffect(() => {
-    if (isOnline && pendingCount > 0) {
-      syncNow();
-    }
+    if (isOnline && pendingCount > 0) { syncNow(); }
   }, [isOnline]);
 
   const syncNow = useCallback(async () => {
     if (isSyncing) return;
     setIsSyncing(true);
     try {
-      const result = await SyncService.syncPending((progress) => {
-        console.log(`[Sync] ${progress.percent}% (${progress.synced} ok, ${progress.failed} falhas)`);
+      const result = await SyncService.syncPending(rotaId, (progress) => {
+        console.log('[Sync] ' + progress.percent + '% (' + progress.synced + ' ok, ' + progress.failed + ' falhas)');
       });
       const remaining = await SyncService.getQueueCount();
       setPendingCount(remaining);
@@ -58,16 +52,12 @@ export const useLocationTracking = () => {
     } finally {
       setIsSyncing(false);
     }
-  }, [isSyncing]);
+  }, [isSyncing, rotaId]);
 
   const getLocation = async () => {
-    if (useMockLocation) {
-      return getMockPosition();
-    }
+    if (useMockLocation) { return getMockPosition(); }
     try {
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
+      const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
       return location;
     } catch (e) {
       console.warn('[Location] Fallback para mock:', e.message);
@@ -80,53 +70,60 @@ export const useLocationTracking = () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        console.warn('[Location] Permissão negada, usando mock');
+        console.warn('[Location] Permissao negada, usando mock');
         setUseMockLocation(true);
       }
     } catch (e) {
-      console.warn('[Location] Erro de permissão, usando mock:', e.message);
+      console.warn('[Location] Erro de permissao, usando mock:', e.message);
       setUseMockLocation(true);
     }
-
     setIsTracking(true);
     setLastError(null);
-
-    // Capturar primeira posição imediatamente
     await capturePosition();
-
-    timerRef.current = setInterval(capturePosition, INTERVAL_MS);
+    timerRef.current = setInterval(capturePosition, GPS_INTERVAL_MS);
   };
 
   const capturePosition = async () => {
     try {
       const location = await getLocation();
-      const payload = {
-        id_patrimonio: 'TB-001',
+      const displayPayload = {
+        patrimonio_tablet: PATRIMONIO_TABLET,
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
         accuracy: location.coords.accuracy,
         speed: location.coords.speed,
         timestamp: new Date().toISOString(),
       };
+      setLastLocation(displayPayload);
+      setLocationHistory(prev => [...prev.slice(-49), displayPayload]);
 
-      setLastLocation(payload);
-      setLocationHistory(prev => [...prev.slice(-49), payload]); // Manter últimos 50
+      const apiPosicao = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        timestamp: new Date().toISOString(),
+      };
 
       if (isOnlineRef.current) {
         try {
-          await apiMock.post('/tracking', payload);
+          if (USE_MOCK_API) {
+            await apiMock.post('/gps/posicao', {
+              patrimonio_tablet: PATRIMONIO_TABLET,
+              rota_id: rotaId,
+              posicoes: [apiPosicao],
+            });
+          } else {
+            await enviarPosicoes(PATRIMONIO_TABLET, rotaId, [apiPosicao]);
+          }
         } catch (e) {
-          // Se falha online, enfileirar
-          await SyncService.enqueue(payload);
+          await SyncService.enqueue(apiPosicao);
           const count = await SyncService.getQueueCount();
           setPendingCount(count);
         }
       } else {
-        await SyncService.enqueue(payload);
+        await SyncService.enqueue(apiPosicao);
         const count = await SyncService.getQueueCount();
         setPendingCount(count);
       }
-
       setLastError(null);
     } catch (e) {
       console.error('[Tracking] Erro:', e);
@@ -135,23 +132,14 @@ export const useLocationTracking = () => {
   };
 
   const stopTracking = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     setIsTracking(false);
   };
 
   return {
-    isTracking,
-    startTracking,
-    stopTracking,
-    pendingCount,
-    lastLocation,
-    locationHistory,
-    isSyncing,
-    syncNow,
-    lastError,
-    useMockLocation,
+    isTracking, startTracking, stopTracking,
+    pendingCount, lastLocation, locationHistory,
+    isSyncing, syncNow, lastError, useMockLocation,
+    rotaId, setRotaId,
   };
 };

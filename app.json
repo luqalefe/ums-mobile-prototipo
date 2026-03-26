@@ -16,7 +16,8 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Precisamos da sua localização para rastrear as entregas."
-      }
+      },
+      "bundleIdentifier": "com.luqalefe.umsmobile"
     },
     "android": {
       "adaptiveIcon": {
@@ -25,8 +26,11 @@
       },
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
-      ]
+        "ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ],
+      "package": "com.luqalefe.umsmobile"
     },
     "plugins": [
       [
@@ -37,6 +41,11 @@
       ],
       "expo-asset",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "c5f8bfef-9848-43b9-8f82-9fab688ee51f"
+      }
+    }
   }
 }
