@@ -1,10 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import * as Location from 'expo-location';
-import apiMock from '../services/apiMock';
 import { enviarPosicoes } from '../services/apiClient';
 import SyncService from '../services/SyncService';
 import { useNetwork } from '../contexts/NetworkContext';
-import { getMockPosition } from '../data/mockRoutes';
 import { PATRIMONIO_TABLET, GPS_INTERVAL_MS, USE_MOCK_API } from '../config';
 
 export const useLocationTracking = () => {
@@ -14,7 +12,6 @@ export const useLocationTracking = () => {
   const [locationHistory, setLocationHistory] = useState([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastError, setLastError] = useState(null);
-  const [useMockLocation, setUseMockLocation] = useState(false);
   const [rotaId, setRotaId] = useState(null);
   const { isOnline } = useNetwork();
   const timerRef = useRef(null);
@@ -55,14 +52,12 @@ export const useLocationTracking = () => {
   }, [isSyncing, rotaId]);
 
   const getLocation = async () => {
-    if (useMockLocation) { return getMockPosition(); }
     try {
       const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
       return location;
     } catch (e) {
-      console.warn('[Location] Fallback para mock:', e.message);
-      setUseMockLocation(true);
-      return getMockPosition();
+      console.warn('[Location] Erro ao obter localizacao:', e.message);
+      throw e;
     }
   };
 
@@ -70,12 +65,14 @@ export const useLocationTracking = () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        console.warn('[Location] Permissao negada, usando mock');
-        setUseMockLocation(true);
+        console.warn('[Location] Permissao negada');
+        setLastError('Permissão de GPS negada.');
+        return;
       }
     } catch (e) {
-      console.warn('[Location] Erro de permissao, usando mock:', e.message);
-      setUseMockLocation(true);
+      console.warn('[Location] Erro de permissao:', e.message);
+      setLastError('Erro ao solicitar permissão de GPS.');
+      return;
     }
     setIsTracking(true);
     setLastError(null);
@@ -105,15 +102,7 @@ export const useLocationTracking = () => {
 
       if (isOnlineRef.current) {
         try {
-          if (USE_MOCK_API) {
-            await apiMock.post('/gps/posicao', {
-              patrimonio_tablet: PATRIMONIO_TABLET,
-              rota_id: rotaId,
-              posicoes: [apiPosicao],
-            });
-          } else {
-            await enviarPosicoes(PATRIMONIO_TABLET, rotaId, [apiPosicao]);
-          }
+          await enviarPosicoes(PATRIMONIO_TABLET, rotaId, [apiPosicao]);
         } catch (e) {
           await SyncService.enqueue(apiPosicao);
           const count = await SyncService.getQueueCount();
@@ -139,7 +128,8 @@ export const useLocationTracking = () => {
   return {
     isTracking, startTracking, stopTracking,
     pendingCount, lastLocation, locationHistory,
-    isSyncing, syncNow, lastError, useMockLocation,
+    isSyncing, syncNow, lastError,
     rotaId, setRotaId,
+    useMockLocation: USE_MOCK_API,
   };
 };

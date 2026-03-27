@@ -10,10 +10,12 @@ const DispatchModal = ({ visible, dispatch, onAccept, onReject }) => {
   const isTablet = width >= 768;
   const slideAnim = useRef(new Animated.Value(height)).current;
   const overlayAnim = useRef(new Animated.Value(0)).current;
+  const animationRef = useRef(null);
 
   useEffect(() => {
+    if (animationRef.current) animationRef.current.stop();
     if (visible) {
-      Animated.parallel([
+      animationRef.current = Animated.parallel([
         Animated.timing(overlayAnim, {
           toValue: 1,
           duration: 300,
@@ -25,9 +27,9 @@ const DispatchModal = ({ visible, dispatch, onAccept, onReject }) => {
           stiffness: 120,
           useNativeDriver: true,
         }),
-      ]).start();
+      ]);
     } else {
-      Animated.parallel([
+      animationRef.current = Animated.parallel([
         Animated.timing(overlayAnim, {
           toValue: 0,
           duration: 200,
@@ -38,8 +40,9 @@ const DispatchModal = ({ visible, dispatch, onAccept, onReject }) => {
           duration: 250,
           useNativeDriver: true,
         }),
-      ]).start();
+      ]);
     }
+    animationRef.current.start();
   }, [visible]);
 
   if (!dispatch) return null;

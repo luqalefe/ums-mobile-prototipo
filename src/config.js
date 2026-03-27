@@ -12,4 +12,4 @@ export const PATRIMONIO_TABLET = 'TREAC-12345';
 export const GPS_INTERVAL_MS = 10000;
 
 // Usar API Mock ao invés da API real (para desenvolvimento)
-export const USE_MOCK_API = true;
+export const USE_MOCK_API = false;

@@ -6,12 +6,14 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import MapViewOSM from '../components/MapViewOSM';
 import DispatchModal from '../components/DispatchModal';
-import MockUmsController from '../services/MockUmsController';
+import { fetchPendingDispatch, respondDispatch } from '../services/dispatchApi';
 
 const MapScreen = () => {
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
   const mapRef = useRef(null);
+  const isMountedRef = useRef(true);
+  const timeoutRef = useRef(null);
 
   const [dispatch, setDispatch] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -19,20 +21,33 @@ const MapScreen = () => {
   const [activeDestination, setActiveDestination] = useState(null);
   const [routeStatus, setRouteStatus] = useState('idle'); // idle, pending, active
 
-  // Simular recebimento de dispatch ao montar
+  // Iniciar polling e cancelar ao desmontar
   useEffect(() => {
+    isMountedRef.current = true;
     waitForDispatch();
+    return () => {
+      isMountedRef.current = false;
+      clearTimeout(timeoutRef.current);
+    };
   }, []);
 
   const waitForDispatch = async () => {
+    if (!isMountedRef.current) return;
     setRouteStatus('pending');
     try {
-      const incoming = await MockUmsController.simulateIncomingDispatch();
-      setDispatch(incoming);
-      setShowModal(true);
+      const incoming = await fetchPendingDispatch();
+      if (!isMountedRef.current) return;
+      if (incoming) {
+        setDispatch(incoming);
+        setShowModal(true);
+      } else {
+        timeoutRef.current = setTimeout(waitForDispatch, 5000);
+      }
     } catch (e) {
-      console.error('[MapScreen] Erro ao receber dispatch:', e);
+      console.error('[MapScreen] Erro ao buscar dispatch pendente:', e);
+      if (!isMountedRef.current) return;
       setRouteStatus('idle');
+      timeoutRef.current = setTimeout(waitForDispatch, 10000);
     }
   };
 
@@ -40,49 +55,53 @@ const MapScreen = () => {
     if (!dispatch) return;
 
     setShowModal(false);
-    setRouteStatus('active');
 
-    // Responder ao mock backend
-    await MockUmsController.respondToDispatch(dispatch.id_chamado, 'ACEITO');
+    try {
+      await respondDispatch(dispatch.id_chamado, 'ACEITO');
+      setRouteStatus('active');
 
-    // Ativar rota no mapa
-    setActiveRoute(dispatch.route_coordinates);
-    setActiveDestination(dispatch.local_destino);
+      setActiveRoute(dispatch.route_coordinates);
+      setActiveDestination(dispatch.local_destino);
 
-    // Ajustar zoom para caber a rota
-    setTimeout(() => {
-      mapRef.current?.fitToRoute();
-    }, 500);
+      setTimeout(() => {
+        mapRef.current?.fitToRoute();
+      }, 500);
 
-    Alert.alert(
-      '✅ Rota Aceita',
-      `Navegando para: ${dispatch.local_destino}`,
-      [{ text: 'OK' }]
-    );
+      Alert.alert(
+        '✅ Rota Aceita',
+        `Navegando para: ${dispatch.local_destino}`,
+        [{ text: 'OK' }]
+      );
+    } catch (e) {
+      Alert.alert('Erro', 'Não foi possível aceitar a rota. Tente novamente.');
+      setShowModal(true);
+    }
   };
 
   const handleReject = async () => {
     if (!dispatch) return;
 
     setShowModal(false);
-    setRouteStatus('idle');
 
-    // Responder ao mock backend
-    await MockUmsController.respondToDispatch(dispatch.id_chamado, 'RECUSADO');
+    try {
+      await respondDispatch(dispatch.id_chamado, 'RECUSADO');
+      setRouteStatus('idle');
+      setDispatch(null);
 
-    setDispatch(null);
-
-    Alert.alert(
-      '🚫 Rota Recusada',
-      'Recusa enviada ao painel. Aguardando novo despacho...',
-      [{
-        text: 'OK',
-        onPress: () => {
-          // Após 2 segundos, simular novo dispatch
-          setTimeout(waitForDispatch, 2000);
-        },
-      }]
-    );
+      Alert.alert(
+        '🚫 Rota Recusada',
+        'Recusa enviada ao painel. Buscando novo despacho...',
+        [{
+          text: 'OK',
+          onPress: () => {
+            timeoutRef.current = setTimeout(waitForDispatch, 3000);
+          },
+        }]
+      );
+    } catch (e) {
+      Alert.alert('Erro', 'Não foi possível recusar. Verifique sua conexão.');
+      setShowModal(true);
+    }
   };
 
   const handleFinishRoute = () => {
@@ -99,7 +118,7 @@ const MapScreen = () => {
             setRouteStatus('idle');
             setDispatch(null);
             // Solicitar novo dispatch
-            setTimeout(waitForDispatch, 2000);
+            timeoutRef.current = setTimeout(waitForDispatch, 2000);
           },
         },
       ]
@@ -201,17 +220,22 @@ const MapScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#071D41',
+    backgroundColor: 'transparent',
   },
   statusBar: {
     position: 'absolute',
     top: Platform.OS === 'ios' ? 55 : 10,
     left: 16,
     right: 16,
-    backgroundColor: '#071D41EE',
+    backgroundColor: 'rgba(255,255,255,0.93)',
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 4,
   },
   statusBarTablet: {
     left: 24,
@@ -231,7 +255,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   statusText: {
-    color: '#FFF',
+    color: '#1A5C38',
     fontSize: 14,
     fontWeight: '600',
     flex: 1,
@@ -265,16 +289,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#1351B4',
   },
   fabCenter: {
-    backgroundColor: '#071D41',
+    backgroundColor: '#1A5C38',
   },
   routePanel: {
     position: 'absolute',
     bottom: 24,
     left: 16,
     right: 80,
-    backgroundColor: '#071D41EE',
+    backgroundColor: 'rgba(255,255,255,0.93)',
     borderRadius: 16,
     padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 4,
   },
   routePanelTablet: {
     left: 24,
@@ -291,7 +320,7 @@ const styles = StyleSheet.create({
   routePanelTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFF',
+    color: '#1A5C38',
     flex: 1,
   },
   routePanelSub: {
@@ -302,7 +331,7 @@ const styles = StyleSheet.create({
   },
   routePanelDesc: {
     fontSize: 13,
-    color: '#AAA',
+    color: '#555',
     lineHeight: 18,
   },
 });

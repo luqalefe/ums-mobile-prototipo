@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { enviarPosicoes } from './apiClient';
-import apiMock from './apiMock';
-import { PATRIMONIO_TABLET, USE_MOCK_API } from '../config';
+import { PATRIMONIO_TABLET } from '../config';
 
 const SYNC_KEY = '@gps_queue';
 const HISTORY_KEY = '@sync_history';
@@ -58,15 +57,7 @@ const SyncService = {
       }
 
       try {
-        if (USE_MOCK_API) {
-          await apiMock.post('/gps/posicao', {
-            patrimonio_tablet: PATRIMONIO_TABLET,
-            rota_id: rotaId,
-            posicoes: queue,
-          });
-        } else {
-          await enviarPosicoes(PATRIMONIO_TABLET, rotaId, queue);
-        }
+        await enviarPosicoes(PATRIMONIO_TABLET, rotaId, queue);
 
         await AsyncStorage.removeItem(SYNC_KEY);
         await SyncService._addToHistory({ type: 'batch', count: queue.length, rotaId }, 'success');

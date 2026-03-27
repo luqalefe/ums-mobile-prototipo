@@ -163,25 +163,27 @@ const MapViewOSM = forwardRef(({ routeCoordinates, destination, children }, ref)
 
   // Live GPS tracking specifically for the map user marker
   useEffect(() => {
-    let subscriber = null;
+    if (!isReady) return;
+    const subscriberRef = { current: null };
+    let cancelled = false;
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') return;
-      
-      subscriber = await Location.watchPositionAsync(
+      if (status !== 'granted' || cancelled) return;
+      subscriberRef.current = await Location.watchPositionAsync(
         { accuracy: Location.Accuracy.Balanced, timeInterval: 3000, distanceInterval: 5 },
         (loc) => {
-          if (isReady) {
-            sendMessage({
-              type: 'updateLocation',
-              lat: loc.coords.latitude,
-              lng: loc.coords.longitude
-            });
-          }
+          sendMessage({
+            type: 'updateLocation',
+            lat: loc.coords.latitude,
+            lng: loc.coords.longitude,
+          });
         }
       );
     })();
-    return () => { if (subscriber) subscriber.remove(); };
+    return () => {
+      cancelled = true;
+      if (subscriberRef.current) subscriberRef.current.remove();
+    };
   }, [isReady]);
 
   return (
