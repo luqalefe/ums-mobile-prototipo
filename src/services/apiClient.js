@@ -29,15 +29,24 @@ export const enviarPosicoes = async (patrimonioTablet, rotaId, posicoes) => {
     body: JSON.stringify(payload),
   });
 
-  const data = await response.json();
+  // Tenta ler o texto primeiro para depuração e para evitar erro de parse se não for JSON
+  const responseText = await response.text();
+  let data;
+  
+  try {
+    data = JSON.parse(responseText);
+  } catch (e) {
+    console.error('[apiClient] Resposta do servidor não é um JSON válido:', responseText.substring(0, 200));
+    throw new Error(`Erro no servidor (HTTP ${response.status})`);
+  }
 
   if (!response.ok) {
-    const errorMsg = data.message || 'Erro HTTP ' + response.status;
+    const errorMsg = data.message || `Erro HTTP ${response.status}`;
     console.error('[apiClient] ❌', errorMsg, data.errors || '');
     throw new Error(errorMsg);
   }
 
-  console.log('[apiClient] ✅', data.message);
+  console.log('[apiClient] ✅', data.message || 'Dados salvos');
   return data;
 };
 

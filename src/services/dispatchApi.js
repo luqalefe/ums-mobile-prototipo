@@ -16,11 +16,17 @@ export const fetchPendingDispatch = async () => {
   });
   
   if (!response.ok) {
-    if (response.status === 404) return null; // Sem despachos atribuídos no momento
-    throw new Error('Erro ao buscar despacho pendente');
+    if (response.status === 404) return null;
+    throw new Error(`Erro ao buscar despacho: HTTP ${response.status}`);
   }
   
-  return await response.json();
+  const responseText = await response.text();
+  try {
+    return JSON.parse(responseText);
+  } catch (e) {
+    console.error('[dispatchApi] Resposta não-JSON em fetchPendingDispatch:', responseText.substring(0, 100));
+    return null;
+  }
 };
 
 /**
@@ -33,15 +39,23 @@ export const respondDispatch = async (id_chamado, resposta) => {
     headers: defaultHeaders,
     body: JSON.stringify({
       patrimonio_tablet: PATRIMONIO_TABLET,
-      resposta: resposta, // Ex: 'ACEITO' ou 'RECUSADO'
+      resposta: resposta,
     }),
   });
   
+  const responseText = await response.text();
+  let data;
+  try {
+    data = JSON.parse(responseText);
+  } catch (e) {
+    throw new Error(`Erro no servidor ao responder despacho (HTTP ${response.status})`);
+  }
+
   if (!response.ok) {
-    throw new Error(`Erro ao responder o despacho: HTTP ${response.status}`);
+    throw new Error(data.message || `Erro ao responder o despacho: HTTP ${response.status}`);
   }
   
-  return await response.json();
+  return data;
 };
 
 export default { fetchPendingDispatch, respondDispatch };
