@@ -9,16 +9,24 @@ import { useLocationTracking } from '../hooks/useLocationTracking';
 import StatusCard from '../components/StatusCard';
 import SyncIndicator from '../components/SyncIndicator';
 
+/**
+ * Painel Principal (Dashboard)
+ * Exibe o status do rastreamento GPS, fila de sincronização offline e métricas de conexão.
+ * Suporta layouts responsivos para Celulares e Tablets Samsung.
+ */
 const Dashboard = ({ navigation }) => {
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
+  const isWideTablet = width >= 1100;
+
+  // Consumo de contextos de rede e rastreamento local
   const { isOnline, forceOffline, toggleForceOffline, stats } = useNetwork();
   const {
     isTracking, startTracking, stopTracking, pendingCount,
     lastLocation, isSyncing, syncNow, lastError, useMockLocation,
   } = useLocationTracking();
 
-  // Animações de entrada
+  // Animações de entrada para suavizar o carregamento da UI
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
@@ -29,7 +37,18 @@ const Dashboard = ({ navigation }) => {
     ]).start();
   }, []);
 
+  /**
+   * Formata coordenadas decimais para exibição
+   * @param {number} val Valor da latitude ou longitude
+   * @returns {string} Valor formatado ou '--'
+   */
   const formatCoord = (val) => val ? val.toFixed(6) : '--';
+
+  /**
+   * Formata timestamp para o formato de hora local
+   * @param {number} ts Timestamp da localização
+   * @returns {string} Hora formatada
+   */
   const formatTime = (ts) => {
     if (!ts) return '--:--';
     const d = new Date(ts);
@@ -40,7 +59,7 @@ const Dashboard = ({ navigation }) => {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
 
-        {/* Header */}
+        {/* Cabeçalho com Status de Conexão */}
         <View style={styles.header}>
           <View>
             <Text style={[styles.title, isTablet && styles.titleTablet]}>
@@ -57,14 +76,14 @@ const Dashboard = ({ navigation }) => {
         </View>
 
         <View style={styles.bodyWrapper}>
-          {/* Sync Indicator */}
+          {/* Indicador de Sincronização (Wi-Fi First) */}
           <SyncIndicator pendingCount={pendingCount} isOnline={isOnline} isSyncing={isSyncing} />
 
-        {/* Cards Grid */}
-        <View style={isTablet ? styles.gridTablet : styles.gridPhone}>
+        {/* Grade de Cards Responsiva */}
+        <View style={isTablet ? [styles.gridTablet, isWideTablet && { marginHorizontal: -8 }] : styles.gridPhone}>
 
-          {/* GPS Control Card */}
-          <View style={isTablet ? styles.gridItem : null}>
+          {/* Card de Controle de Rastreamento */}
+          <View style={isWideTablet ? styles.gridItemWide : (isTablet ? styles.gridItem : null)}>
             <StatusCard
               icon="navigate"
               iconColor={isTracking ? '#168821' : '#FF5252'}
@@ -74,26 +93,26 @@ const Dashboard = ({ navigation }) => {
               <View style={styles.trackingStatus}>
                 <Ionicons
                   name={isTracking ? 'radio' : 'radio-outline'}
-                  size={24}
+                  size={isTablet ? 28 : 24}
                   color={isTracking ? '#168821' : '#666'}
                 />
-                <Text style={[styles.trackingText, { color: isTracking ? '#168821' : '#999' }]}>
+                <Text style={[styles.trackingText, isTablet && styles.trackingTextTablet, { color: isTracking ? '#168821' : '#999' }]}>
                   {isTracking ? 'Rastreando a cada 10s' : 'Parado'}
                 </Text>
               </View>
 
               <TouchableOpacity
-                style={[styles.button, isTracking ? styles.stopBtn : styles.startBtn]}
+                style={[styles.button, isTablet && styles.buttonTablet, isTracking ? styles.stopBtn : styles.startBtn]}
                 onPress={isTracking ? stopTracking : startTracking}
                 activeOpacity={0.7}
               >
                 <Ionicons
                   name={isTracking ? 'stop-circle' : 'play-circle'}
-                  size={20}
+                  size={isTablet ? 24 : 20}
                   color="#FFF"
                   style={{ marginRight: 8 }}
                 />
-                <Text style={styles.buttonText}>
+                <Text style={[styles.buttonText, isTablet && styles.buttonTextTablet]}>
                   {isTracking ? 'Parar' : 'Iniciar Rastreamento'}
                 </Text>
               </TouchableOpacity>
@@ -101,7 +120,7 @@ const Dashboard = ({ navigation }) => {
           </View>
 
           {/* Last Position Card */}
-          <View style={isTablet ? styles.gridItem : null}>
+          <View style={isWideTablet ? styles.gridItemWide : (isTablet ? styles.gridItem : null)}>
             <StatusCard
               icon="location"
               iconColor="#2196F3"
@@ -111,30 +130,30 @@ const Dashboard = ({ navigation }) => {
               {lastLocation ? (
                 <View style={styles.coordsContainer}>
                   <View style={styles.coordRow}>
-                    <Text style={styles.coordLabel}>LAT</Text>
-                    <Text style={styles.coordValue}>{formatCoord(lastLocation.latitude)}</Text>
+                    <Text style={[styles.coordLabel, isTablet && styles.coordLabelTablet]}>LAT</Text>
+                    <Text style={[styles.coordValue, isTablet && styles.coordValueTablet]}>{formatCoord(lastLocation.latitude)}</Text>
                   </View>
                   <View style={styles.coordRow}>
-                    <Text style={styles.coordLabel}>LNG</Text>
-                    <Text style={styles.coordValue}>{formatCoord(lastLocation.longitude)}</Text>
+                    <Text style={[styles.coordLabel, isTablet && styles.coordLabelTablet]}>LNG</Text>
+                    <Text style={[styles.coordValue, isTablet && styles.coordValueTablet]}>{formatCoord(lastLocation.longitude)}</Text>
                   </View>
                   {lastLocation.speed !== null && (
                     <View style={styles.coordRow}>
-                      <Text style={styles.coordLabel}>VEL</Text>
-                      <Text style={styles.coordValue}>
+                      <Text style={[styles.coordLabel, isTablet && styles.coordLabelTablet]}>VEL</Text>
+                      <Text style={[styles.coordValue, isTablet && styles.coordValueTablet]}>
                         {(lastLocation.speed * 3.6).toFixed(1)} km/h
                       </Text>
                     </View>
                   )}
                 </View>
               ) : (
-                <Text style={styles.noData}>Inicie o rastreamento para ver dados</Text>
+                <Text style={[styles.noData, isTablet && styles.noDataTablet]}>Inicie o rastreamento para ver dados</Text>
               )}
             </StatusCard>
           </View>
 
           {/* Queue Card */}
-          <View style={isTablet ? styles.gridItem : null}>
+          <View style={isWideTablet ? styles.gridItemWide : (isTablet ? styles.gridItem : null)}>
             <StatusCard
               icon="cloud-upload"
               iconColor="#FFCD07"
@@ -145,13 +164,13 @@ const Dashboard = ({ navigation }) => {
             >
               {pendingCount > 0 && isOnline && (
                 <TouchableOpacity
-                  style={[styles.button, styles.syncBtn]}
+                  style={[styles.button, isTablet && styles.buttonTablet, styles.syncBtn]}
                   onPress={syncNow}
                   disabled={isSyncing}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="sync" size={18} color="#FFF" style={{ marginRight: 8 }} />
-                  <Text style={styles.buttonText}>
+                  <Ionicons name="sync" size={isTablet ? 22 : 18} color="#FFF" style={{ marginRight: 8 }} />
+                  <Text style={[styles.buttonText, isTablet && styles.buttonTextTablet]}>
                     {isSyncing ? 'Sincronizando...' : 'Sincronizar Agora'}
                   </Text>
                 </TouchableOpacity>
@@ -160,7 +179,7 @@ const Dashboard = ({ navigation }) => {
           </View>
 
           {/* Network Control Card */}
-          <View style={isTablet ? styles.gridItem : null}>
+          <View style={isWideTablet ? styles.gridItemWide : (isTablet ? styles.gridItem : null)}>
             <StatusCard
               icon="wifi"
               iconColor="#1351B4"
@@ -168,17 +187,17 @@ const Dashboard = ({ navigation }) => {
               subtitle={`${stats.reconnections} reconexão(ões) • ${stats.offlineDuration}s offline total`}
             >
               <TouchableOpacity
-                style={[styles.button, forceOffline ? styles.onlineBtn : styles.offlineBtn]}
+                style={[styles.button, isTablet && styles.buttonTablet, forceOffline ? styles.onlineBtn : styles.offlineBtn]}
                 onPress={toggleForceOffline}
                 activeOpacity={0.7}
               >
                 <Ionicons
                   name={forceOffline ? 'wifi' : 'airplane'}
-                  size={18}
+                  size={isTablet ? 22 : 18}
                   color="#FFF"
                   style={{ marginRight: 8 }}
                 />
-                <Text style={styles.buttonText}>
+                <Text style={[styles.buttonText, isTablet && styles.buttonTextTablet]}>
                   {forceOffline ? 'Restaurar Conexão' : 'Simular Offline'}
                 </Text>
               </TouchableOpacity>
@@ -263,6 +282,10 @@ const styles = StyleSheet.create({
     width: '50%',
     paddingHorizontal: 6,
   },
+  gridItemWide: {
+    width: '33.33%',
+    paddingHorizontal: 8,
+  },
   trackingStatus: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -273,6 +296,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 10,
   },
+  trackingTextTablet: {
+    fontSize: 18,
+  },
   button: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -281,6 +307,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 12,
     marginTop: 8,
+  },
+  buttonTablet: {
+    paddingVertical: 18,
+    borderRadius: 16,
   },
   startBtn: { backgroundColor: '#168821' },
   stopBtn: { backgroundColor: '#E52207' },
@@ -292,6 +322,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     textTransform: 'uppercase',
+  },
+  buttonTextTablet: {
+    fontSize: 17,
   },
   coordsContainer: {
     marginTop: 4,
@@ -310,16 +343,25 @@ const styles = StyleSheet.create({
     color: '#1351B4',
     letterSpacing: 1,
   },
+  coordLabelTablet: {
+    fontSize: 14,
+  },
   coordValue: {
     fontSize: 16,
     color: '#333333',
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  coordValueTablet: {
+    fontSize: 20,
   },
   noData: {
     color: '#555',
     fontSize: 14,
     textAlign: 'center',
     marginVertical: 12,
+  },
+  noDataTablet: {
+    fontSize: 16,
   },
   errorBanner: {
     flexDirection: 'row',

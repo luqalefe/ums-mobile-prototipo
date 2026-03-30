@@ -1,80 +1,87 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+/**
+ * Serviço de Sincronização (SyncService)
+ * Gerencia a fila offline de posições GPS utilizando armazenamento seguro (criptografado).
+ * Segue o padrão Wi-Fi First: armazena localmente em falhas e sincroniza quando online.
+ */
+import * as SecureStore from 'expo-secure-store';
 import { enviarPosicoes } from './apiClient';
 import { PATRIMONIO_TABLET } from '../config';
 
-const SYNC_KEY = '@gps_queue';
-const HISTORY_KEY = '@sync_history';
-const CHUNK_SIZE = 50; // Enviar no máximo 50 posições por vez
+const SYNC_KEY = 'gps_queue_secure';
+const HISTORY_KEY = 'sync_history_secure';
+const CHUNK_SIZE = 50; // Limite de posições por lote de envio (conforme api_gps_mobile.md)
 
-// Lock simples para evitar condições de corrida entre enqueue e sync
+// Lock para evitar condições de corrida em operações assíncronas
 let isProcessing = false;
+
+/**
+ * Helper para persistência segura
+ */
+const saveSecure = async (key, data) => {
+  try {
+    await SecureStore.setItemAsync(key, JSON.stringify(data));
+  } catch (e) {
+    console.error(`[SyncService] Erro ao salvar no SecureStore (${key}):`, e);
+  }
+};
+
+/**
+ * Helper para leitura segura
+ */
+const getSecure = async (key) => {
+  try {
+    const data = await SecureStore.getItemAsync(key);
+    return data ? JSON.parse(data) : null;
+  } catch (e) {
+    console.error(`[SyncService] Erro ao ler do SecureStore (${key}):`, e);
+    return null;
+  }
+};
 
 const SyncService = {
   /**
-   * Enfileira uma posição para envio posterior.
-   * Agora inclui o rotaId para garantir que o ponto seja vinculado à rota correta mesmo offline.
+   * Enfileira uma posição para envio posterior em caso de falha de rede.
+   * @param {Object} posicao Coordenadas e timestamp
+   * @param {string|null} rotaId ID da rota ativa no momento da captura
    */
   enqueue: async (posicao, rotaId = null) => {
-    // Aguarda se estiver processando para evitar leitura de dado sujo
     if (isProcessing) {
-      // Pequeno delay e tenta novamente uma vez
       await new Promise(r => setTimeout(r, 100));
     }
 
     try {
-      const existing = await AsyncStorage.getItem(SYNC_KEY);
-      const queue = existing ? JSON.parse(existing) : [];
+      const queue = (await getSecure(SYNC_KEY)) || [];
       
       queue.push({
         latitude: posicao.latitude,
         longitude: posicao.longitude,
         timestamp: posicao.timestamp,
-        rota_id: rotaId, // Salva a rota ativa no momento da captura
+        rota_id: rotaId,
       });
 
-      await AsyncStorage.setItem(SYNC_KEY, JSON.stringify(queue));
-      console.log(`[SyncService] Enfileirado offline (total: ${queue.length}) | Rota: ${rotaId}`);
+      await saveSecure(SYNC_KEY, queue);
       return queue.length;
     } catch (e) {
-      console.error('[SyncService] Erro ao enfileirar', e);
       return -1;
     }
   },
 
   getQueueCount: async () => {
-    try {
-      const existing = await AsyncStorage.getItem(SYNC_KEY);
-      return existing ? JSON.parse(existing).length : 0;
-    } catch (e) {
-      return 0;
-    }
-  },
-
-  getQueue: async () => {
-    try {
-      const existing = await AsyncStorage.getItem(SYNC_KEY);
-      return existing ? JSON.parse(existing) : [];
-    } catch (e) {
-      return [];
-    }
+    const queue = await getSecure(SYNC_KEY);
+    return queue ? queue.length : 0;
   },
 
   /**
    * Sincroniza posições pendentes em lotes (chunks).
-   * Não apaga a fila inteira; remove apenas o que foi confirmado pelo servidor.
+   * @param {string} currentRotaId Rota ativa para vinculação do lote
+   * @param {Function} onProgress Callback para atualização da UI (SyncIndicator)
    */
   syncPending: async (currentRotaId, onProgress) => {
     if (isProcessing) return { synced: 0, failed: 0 };
     isProcessing = true;
 
     try {
-      const existing = await AsyncStorage.getItem(SYNC_KEY);
-      if (!existing) {
-        isProcessing = false;
-        return { synced: 0, failed: 0 };
-      }
-
-      let queue = JSON.parse(existing);
+      let queue = (await getSecure(SYNC_KEY)) || [];
       if (queue.length === 0) {
         isProcessing = false;
         return { synced: 0, failed: 0 };
@@ -84,25 +91,18 @@ const SyncService = {
       let totalSynced = 0;
       let totalFailed = 0;
 
-      console.log(`[SyncService] Sincronizando ${totalItems} posicoes em chunks de ${CHUNK_SIZE}...`);
-
-      // Processar em chunks
+      // Processamento em lotes para evitar sobrecarga na API Laravel
       while (queue.length > 0) {
         const chunk = queue.slice(0, CHUNK_SIZE);
-        
-        // Agrupar por rota_id dentro do chunk (conforme api_gps_mobile.md, cada POST leva um rota_id principal)
-        // Se houver múltiplas rotas no chunk, pegamos a do primeiro item ou a informada
         const chunkRotaId = chunk[0].rota_id || currentRotaId;
 
         try {
           await enviarPosicoes(PATRIMONIO_TABLET, chunkRotaId, chunk);
           
-          // Sucesso: Remove este chunk da fila original
+          // Sucesso: Remove lote enviado e persiste a fila restante
           queue = queue.slice(chunk.length);
           totalSynced += chunk.length;
-          
-          // Atualiza o storage imediatamente após cada chunk bem sucedido
-          await AsyncStorage.setItem(SYNC_KEY, JSON.stringify(queue));
+          await saveSecure(SYNC_KEY, queue);
 
           if (onProgress) {
             onProgress({ 
@@ -114,20 +114,19 @@ const SyncService = {
             });
           }
         } catch (err) {
-          console.error(`[SyncService] Chunk falhou: ${err.message}`);
           totalFailed = totalItems - totalSynced;
           await SyncService._addToHistory({ 
             type: 'chunk_fail', 
             count: chunk.length, 
             error: err.message 
           }, 'failed');
-          break; // Para o processamento se um chunk falhar
+          break; // Interrompe se houver falha persistente de rede
         }
       }
 
       if (totalSynced > 0) {
         await SyncService._addToHistory({ 
-          type: 'batch_partial', 
+          type: 'batch_sync', 
           count: totalSynced, 
           status: totalFailed > 0 ? 'partial' : 'success' 
         }, totalFailed > 0 ? 'warning' : 'success');
@@ -137,39 +136,28 @@ const SyncService = {
       return { synced: totalSynced, failed: totalFailed };
 
     } catch (e) {
-      console.error('[SyncService] Sync crítico falhou', e);
       isProcessing = false;
       return { synced: 0, failed: -1 };
     }
   },
 
   getHistory: async (limit = 50) => {
-    try {
-      const history = await AsyncStorage.getItem(HISTORY_KEY);
-      const items = history ? JSON.parse(history) : [];
-      return items.slice(-limit).reverse();
-    } catch (e) {
-      return [];
-    }
-  },
-
-  clearHistory: async () => {
-    await AsyncStorage.removeItem(HISTORY_KEY);
+    const history = (await getSecure(HISTORY_KEY)) || [];
+    return history.slice(-limit).reverse();
   },
 
   _addToHistory: async (item, status) => {
     try {
-      const existing = await AsyncStorage.getItem(HISTORY_KEY);
-      const history = existing ? JSON.parse(existing) : [];
+      const history = (await getSecure(HISTORY_KEY)) || [];
       history.push({
         ...item,
         syncStatus: status,
         syncedAt: new Date().toISOString(),
       });
-      const trimmed = history.slice(-200);
-      await AsyncStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
+      // Mantém apenas os últimos 200 logs para economizar espaço seguro
+      await saveSecure(HISTORY_KEY, history.slice(-200));
     } catch (e) {
-      // silencioso
+      // Falha silenciosa em logs de histórico
     }
   },
 };

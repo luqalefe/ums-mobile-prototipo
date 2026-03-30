@@ -191,7 +191,7 @@ const MapViewOSM = forwardRef(({ routeCoordinates, destination, children }, ref)
       ref={webViewRef}
       source={{ html: generateHTML() }}
       style={styles.map}
-      originWhitelist={['*']}
+      originWhitelist={['https://unpkg.com', 'https://*.openstreetmap.org']}
       javaScriptEnabled={true}
       domStorageEnabled={true}
       onMessage={() => {}}
@@ -201,8 +201,6 @@ const MapViewOSM = forwardRef(({ routeCoordinates, destination, children }, ref)
       overScrollMode="never"
       showsVerticalScrollIndicator={false}
       showsHorizontalScrollIndicator={false}
-      mixedContentMode="compatibility"
-      allowFileAccess={true}
       setSupportMultipleWindows={false}
     />
   );

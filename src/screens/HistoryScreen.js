@@ -46,19 +46,19 @@ const HistoryScreen = () => {
 
   const renderLiveItem = ({ item, index }) => (
     <View style={[styles.item, isTablet && styles.itemTablet]}>
-      <View style={styles.indexBadge}>
-        <Text style={styles.indexText}>{locationHistory.length - index}</Text>
+      <View style={[styles.indexBadge, isTablet && styles.indexBadgeTablet]}>
+        <Text style={[styles.indexText, isTablet && styles.indexTextTablet]}>{locationHistory.length - index}</Text>
       </View>
       <View style={styles.itemContent}>
         <View style={styles.itemHeader}>
-          <Text style={styles.itemTime}>{formatTime(item.timestamp)}</Text>
-          <Text style={styles.itemAsset}>{item.id_patrimonio}</Text>
+          <Text style={[styles.itemTime, isTablet && styles.itemTimeTablet]}>{formatTime(item.timestamp)}</Text>
+          <Text style={[styles.itemAsset, isTablet && styles.itemAssetTablet]}>{item.id_patrimonio}</Text>
         </View>
-        <Text style={styles.itemCoords}>
+        <Text style={[styles.itemCoords, isTablet && styles.itemCoordsTablet]}>
           📍 {item.latitude.toFixed(6)}, {item.longitude.toFixed(6)}
         </Text>
         {item.speed !== null && item.speed !== undefined && (
-          <Text style={styles.itemDetail}>
+          <Text style={[styles.itemDetail, isTablet && styles.itemDetailTablet]}>
             🚀 {(item.speed * 3.6).toFixed(1)} km/h • Precisão: {item.accuracy?.toFixed(0)}m
           </Text>
         )}
@@ -70,25 +70,29 @@ const HistoryScreen = () => {
     const isSuccess = item.syncStatus === 'success';
     return (
       <View style={[styles.item, isTablet && styles.itemTablet]}>
-        <View style={[styles.syncStatusIcon, { backgroundColor: isSuccess ? '#16882120' : '#E5220720' }]}>
+        <View style={[
+          styles.syncStatusIcon,
+          isTablet && styles.syncStatusIconTablet,
+          { backgroundColor: isSuccess ? '#16882120' : '#E5220720' }
+        ]}>
           <Ionicons
             name={isSuccess ? 'checkmark-circle' : 'close-circle'}
-            size={20}
+            size={isTablet ? 28 : 20}
             color={isSuccess ? '#168821' : '#E52207'}
           />
         </View>
         <View style={styles.itemContent}>
           <View style={styles.itemHeader}>
-            <Text style={styles.itemTime}>
+            <Text style={[styles.itemTime, isTablet && styles.itemTimeTablet]}>
               {formatDate(item.syncedAt)} {formatTime(item.syncedAt)}
             </Text>
-            <View style={[styles.syncBadge, { backgroundColor: isSuccess ? '#16882130' : '#E5220730' }]}>
-              <Text style={[styles.syncBadgeText, { color: isSuccess ? '#168821' : '#E52207' }]}>
+            <View style={[styles.syncBadge, isTablet && styles.syncBadgeTablet, { backgroundColor: isSuccess ? '#16882130' : '#E5220730' }]}>
+              <Text style={[styles.syncBadgeText, isTablet && styles.syncBadgeTextTablet, { color: isSuccess ? '#168821' : '#E52207' }]}>
                 {isSuccess ? 'Enviado' : 'Falhou'}
               </Text>
             </View>
           </View>
-          <Text style={styles.itemCoords}>
+          <Text style={[styles.itemCoords, isTablet && styles.itemCoordsTablet]}>
             📍 {item.latitude?.toFixed(6)}, {item.longitude?.toFixed(6)}
           </Text>
         </View>
@@ -237,10 +241,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 14,
   },
+  indexBadgeTablet: {
+    width: 50,
+    height: 50,
+    borderRadius: 14,
+    marginRight: 20,
+  },
   indexText: {
     color: '#1351B4',
     fontWeight: '700',
     fontSize: 14,
+  },
+  indexTextTablet: {
+    fontSize: 18,
   },
   syncStatusIcon: {
     width: 36,
@@ -249,6 +262,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
+  },
+  syncStatusIconTablet: {
+    width: 50,
+    height: 50,
+    borderRadius: 14,
+    marginRight: 20,
   },
   itemContent: {
     flex: 1,
@@ -264,6 +283,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  itemTimeTablet: {
+    fontSize: 18,
+  },
   itemAsset: {
     color: '#1351B4',
     fontSize: 12,
@@ -273,24 +295,44 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 6,
   },
+  itemAssetTablet: {
+    fontSize: 15,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
   itemCoords: {
     color: '#A0A0B0',
     fontSize: 13,
     marginTop: 2,
+  },
+  itemCoordsTablet: {
+    fontSize: 16,
+    marginTop: 6,
   },
   itemDetail: {
     color: '#666680',
     fontSize: 12,
     marginTop: 2,
   },
+  itemDetailTablet: {
+    fontSize: 14,
+    marginTop: 6,
+  },
   syncBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 6,
   },
+  syncBadgeTablet: {
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
   syncBadgeText: {
     fontSize: 11,
     fontWeight: '700',
+  },
+  syncBadgeTextTablet: {
+    fontSize: 14,
   },
   emptyContainer: {
     alignItems: 'center',

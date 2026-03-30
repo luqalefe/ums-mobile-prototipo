@@ -8,9 +8,16 @@ import MapViewOSM from '../components/MapViewOSM';
 import DispatchModal from '../components/DispatchModal';
 import { fetchPendingDispatch, respondDispatch } from '../services/dispatchApi';
 
+/**
+ * Tela de Mapa e Operações de Campo
+ * Exibe o mapa OSM com rastreamento em tempo real e gerenciamento de despachos (corridas).
+ * Otimizado para evitar travamentos em tablets Samsung ao renderizar múltiplos pontos.
+ */
 const MapScreen = () => {
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
+  
+  // Referências para controle de mapa e ciclo de vida
   const mapRef = useRef(null);
   const isMountedRef = useRef(true);
   const timeoutRef = useRef(null);
@@ -19,9 +26,9 @@ const MapScreen = () => {
   const [showModal, setShowModal] = useState(false);
   const [activeRoute, setActiveRoute] = useState(null);
   const [activeDestination, setActiveDestination] = useState(null);
-  const [routeStatus, setRouteStatus] = useState('idle'); // idle, pending, active
+  const [routeStatus, setRouteStatus] = useState('idle'); // Estados: idle, pending, active
 
-  // Iniciar polling e cancelar ao desmontar
+  // Inicializa o polling para busca de novos chamados
   useEffect(() => {
     isMountedRef.current = true;
     waitForDispatch();
@@ -31,6 +38,9 @@ const MapScreen = () => {
     };
   }, []);
 
+  /**
+   * Realiza busca recursiva por despachos pendentes na API (Laravel)
+   */
   const waitForDispatch = async () => {
     if (!isMountedRef.current) return;
     setRouteStatus('pending');
@@ -41,6 +51,7 @@ const MapScreen = () => {
         setDispatch(incoming);
         setShowModal(true);
       } else {
+        // Tenta novamente em 5 segundos se não houver despacho
         timeoutRef.current = setTimeout(waitForDispatch, 5000);
       }
     } catch (e) {
@@ -51,6 +62,9 @@ const MapScreen = () => {
     }
   };
 
+  /**
+   * Aceita a rota proposta e inicia a navegação
+   */
   const handleAccept = async () => {
     if (!dispatch) return;
 
@@ -63,6 +77,7 @@ const MapScreen = () => {
       setActiveRoute(dispatch.route_coordinates);
       setActiveDestination(dispatch.local_destino);
 
+      // Ajusta o zoom do mapa para englobar a rota
       setTimeout(() => {
         mapRef.current?.fitToRoute();
       }, 500);
@@ -147,9 +162,10 @@ const MapScreen = () => {
         <View style={styles.statusContent}>
           <View style={[
             styles.statusIndicator,
+            isTablet && styles.statusIndicatorTablet,
             { backgroundColor: routeStatus === 'active' ? '#168821' : routeStatus === 'pending' ? '#FFCD07' : '#666' }
           ]} />
-          <Text style={styles.statusText}>
+          <Text style={[styles.statusText, isTablet && styles.statusTextTablet]}>
             {routeStatus === 'active' && `🚛 Em rota: ${activeDestination}`}
             {routeStatus === 'pending' && '📡 Aguardando despacho...'}
             {routeStatus === 'idle' && '⏹️ Sem rota ativa'}
@@ -161,31 +177,31 @@ const MapScreen = () => {
       <View style={[styles.fabContainer, isTablet && styles.fabContainerTablet]}>
         {routeStatus === 'active' && (
           <TouchableOpacity
-            style={[styles.fab, styles.fabFinish]}
+            style={[styles.fab, isTablet && styles.fabTablet, styles.fabFinish]}
             onPress={handleFinishRoute}
             activeOpacity={0.7}
           >
-            <Ionicons name="checkmark-done" size={24} color="#FFF" />
+            <Ionicons name="checkmark-done" size={isTablet ? 32 : 24} color="#FFF" />
           </TouchableOpacity>
         )}
 
         {routeStatus === 'idle' && (
           <TouchableOpacity
-            style={[styles.fab, styles.fabDispatch]}
+            style={[styles.fab, isTablet && styles.fabTablet, styles.fabDispatch]}
             onPress={handleRequestNewDispatch}
             activeOpacity={0.7}
           >
-            <Ionicons name="radio" size={24} color="#FFF" />
+            <Ionicons name="radio" size={isTablet ? 32 : 24} color="#FFF" />
           </TouchableOpacity>
         )}
 
         {activeRoute && (
           <TouchableOpacity
-            style={[styles.fab, styles.fabCenter]}
+            style={[styles.fab, isTablet && styles.fabTablet, styles.fabCenter]}
             onPress={() => mapRef.current?.fitToRoute()}
             activeOpacity={0.7}
           >
-            <Ionicons name="locate" size={22} color="#FFF" />
+            <Ionicons name="locate" size={isTablet ? 32 : 22} color="#FFF" />
           </TouchableOpacity>
         )}
       </View>
@@ -194,13 +210,13 @@ const MapScreen = () => {
       {routeStatus === 'active' && dispatch && (
         <View style={[styles.routePanel, isTablet && styles.routePanelTablet]}>
           <View style={styles.routePanelHeader}>
-            <Ionicons name="navigate" size={20} color="#168821" />
-            <Text style={styles.routePanelTitle}>{dispatch.local_destino}</Text>
+            <Ionicons name="navigate" size={isTablet ? 26 : 20} color="#168821" />
+            <Text style={[styles.routePanelTitle, isTablet && styles.routePanelTitleTablet]}>{dispatch.local_destino}</Text>
           </View>
-          <Text style={styles.routePanelSub}>
+          <Text style={[styles.routePanelSub, isTablet && styles.routePanelSubTablet]}>
             {dispatch.id_chamado} • {dispatch.prioridade}
           </Text>
-          <Text style={styles.routePanelDesc} numberOfLines={2}>
+          <Text style={[styles.routePanelDesc, isTablet && styles.routePanelDescTablet]} numberOfLines={2}>
             {dispatch.descricao_ocorrencia}
           </Text>
         </View>
@@ -241,8 +257,9 @@ const styles = StyleSheet.create({
     left: 24,
     right: 24,
     top: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingHorizontal: 24,
+    paddingVertical: 18,
+    borderRadius: 20,
   },
   statusContent: {
     flexDirection: 'row',
@@ -254,11 +271,20 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginRight: 10,
   },
+  statusIndicatorTablet: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    marginRight: 14,
+  },
   statusText: {
     color: '#1A5C38',
     fontSize: 14,
     fontWeight: '600',
     flex: 1,
+  },
+  statusTextTablet: {
+    fontSize: 18,
   },
   fabContainer: {
     position: 'absolute',
@@ -268,7 +294,7 @@ const styles = StyleSheet.create({
   },
   fabContainerTablet: {
     right: 24,
-    bottom: 120,
+    bottom: 40,
   },
   fab: {
     width: 56,
@@ -281,6 +307,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 8,
+  },
+  fabTablet: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
   },
   fabFinish: {
     backgroundColor: '#168821',
@@ -307,9 +338,11 @@ const styles = StyleSheet.create({
   },
   routePanelTablet: {
     left: 24,
-    right: 100,
-    bottom: 32,
-    padding: 20,
+    right: 'auto',
+    width: 400,
+    bottom: 40,
+    padding: 24,
+    borderRadius: 24,
   },
   routePanelHeader: {
     flexDirection: 'row',
@@ -323,16 +356,26 @@ const styles = StyleSheet.create({
     color: '#1A5C38',
     flex: 1,
   },
+  routePanelTitleTablet: {
+    fontSize: 20,
+  },
   routePanelSub: {
     fontSize: 12,
     color: '#888',
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     marginBottom: 6,
   },
+  routePanelSubTablet: {
+    fontSize: 14,
+  },
   routePanelDesc: {
     fontSize: 13,
     color: '#555',
     lineHeight: 18,
+  },
+  routePanelDescTablet: {
+    fontSize: 16,
+    lineHeight: 22,
   },
 });
 

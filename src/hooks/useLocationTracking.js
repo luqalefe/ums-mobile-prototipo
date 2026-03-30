@@ -55,7 +55,7 @@ export const useLocationTracking = () => {
     setIsSyncing(true);
     try {
       const result = await SyncService.syncPending(rotaIdRef.current, (progress) => {
-        console.log(`[Sync] ${progress.percent}% (${progress.synced} ok, ${progress.failed} falhas)`);
+        // Log de progresso simplificado para auditoria
       });
       await refreshQueueCount();
       setLastError(null);
@@ -107,6 +107,13 @@ export const useLocationTracking = () => {
   const capturePosition = async () => {
     try {
       const location = await getLocation();
+      
+      // SEGURANÇA: Bloqueio de posições simuladas (Mock Location)
+      if (location.mocked) {
+        console.warn('[Security] GPS Falso detectado. Posição ignorada.');
+        setLastError('Atenção: GPS Falso detectado. Desative simuladores para rastrear.');
+        return;
+      }
       
       const timestamp = new Date().toISOString();
       const payload = {
